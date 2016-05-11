@@ -1,0 +1,10 @@
+
+cp stellgap_soundwave_lagrng_ver$1.f temp.c
+cpp -P -C -traditional-cpp -DPARALLEL temp.c > temp.f
+ftn -O3 -c temp.f
+mv temp.o stellgap_soundwave_lagrng_ver$1.o
+rm temp.c temp.f
+
+ftn -O3 -c Fourier_lib_convolve.f
+ftn -O3 -c fitpack.f
+ftn -O3 -o xstgap_snd_ver$1 stellgap_soundwave_lagrng_ver$1.o Fourier_lib_convolve.o fitpack.o -I.

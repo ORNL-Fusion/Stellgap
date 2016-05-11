@@ -1,0 +1,14 @@
+MKLINCLUDE="-I${MKLROOT}/include"
+MKLLINK="${MKLROOT}/lib/libmkl_intel_lp64.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_sequential.a -lpthread -lm"
+FC=ifort
+FFLAGS=" -O2 -fixed"
+
+cp stellgap_soundwave_lagrng_ver$1.f temp.c
+cpp -E -P -C -DSERIAL temp.c > temp.f
+$FC $FFLAGS -c temp.f
+mv temp.o stellgap_soundwave_lagrng_ver$1.o
+rm temp.c temp.f
+
+$FC $FFLAGS -c Fourier_lib_convolve.f
+$FC $FFLAGS  -c fitpack.f
+$FC $FFLAGS -o xstgap_snd_ver$1 -I. $MKLINCLUDE $MKLLINK stellgap_soundwave_lagrng_ver$1.o Fourier_lib_convolve.o fitpack.o

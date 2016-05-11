@@ -1,0 +1,6 @@
+LIBSTELL=/Volumes/new_stellopt_64bit_ver8.46/LIBSTELL/Release
+LIBSTELLA=/Volumes/new_stellopt_64bit_ver8.46/LIBSTELL/Release/libstell.a
+
+ifort -O2 -c metric_element_create_ver8.46.f -I$LIBSTELL
+ifort -O2 -o xmetric_ver8.46 metric_element_create_ver8.46.o -I$LIBSTELL $LIBSTELLA  \
+/Users/dsp/Applications/netcdf-4.0.1_install/lib/libnetcdf.a \

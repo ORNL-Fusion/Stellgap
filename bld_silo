@@ -1,0 +1,3 @@
+ifort -O -c stelgp_to_silo.f
+ifort -O -o xsilo stelgp_to_silo.o \
+ -L/Users/dsp/fortran_code_development/Silo-4.6.2/lib -lsilo
