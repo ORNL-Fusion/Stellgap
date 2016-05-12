@@ -6,7 +6,7 @@ c   coming in from stellgap, post_process is in tor_flux.
 c
       implicit none
       include
-     >"../../Silo-4.6.2/include/silo.inc"
+     >"/Users/dsp/fortran_code_development/Silo-4.6.2/include/silo.inc"
        real, allocatable :: r(:), omega(:), rr(:), w(:)
        integer, allocatable :: m(:), n(:), nn(:), mm(:)
        real :: freq_norm, freq_sort_max, dum1, dum2, dum3

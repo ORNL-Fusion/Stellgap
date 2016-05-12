@@ -641,7 +641,8 @@ c
 c    Boozer coordinates input - new ae-mode-structure input
 c
       open(unit=20,file="tae_data_boozer",status="old")
-      read(20,'(L)') lrfp
+c      read(20,'(L)') lrfp    !uncomment and remove next line if lrfp added to tae_data_boozer
+      lrfp = .false.
       if(lrfp) write(*,'("Using RFP settings")')
       if(.not.lrfp) write(*,'("Using tokamak/stellarator settings")')
       do ir = 1,irads
