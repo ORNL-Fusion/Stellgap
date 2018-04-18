@@ -69,7 +69,7 @@ c
 c  Input parameters:   (fourier.dat file).
 c
 c   ith, izt = number of theta and zeta grid points in the original mesh data
-c     (in file tae_data_vmec) calculated by xcobra_vmec_tae.
+c     (in file tae_data_vmec) calculated by the xmetric code.
 c    This file contains data
 c    for iota, phipc, |B|, gssup (the psi-psi contra-variant metric element,
 c    the Jacobian, and the contravariant poloidal and toroidal components of
