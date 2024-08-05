@@ -1,0 +1,5 @@
+OPT="-O2"
+mpifort -c $OPT stellgap_parallel_ver5.f
+gfortran -c $OPT Fourier_lib_convolve.f
+gfortran -c $OPT fitpack.f
+mpifort $OPT -o xstgap -I. stellgap_parallel_ver5.o Fourier_lib_convolve.o fitpack.o -llapack
