@@ -88,7 +88,7 @@ C-----------------------------------------------
       make_full_torus = .true.
       surf_compute = .true.
       numargs = iargc()
-      numchars = getarg(1,arg1)
+      CALL getarg(1,arg1)
       if( numargs.ne.1 )then
         print *,' MUST ENTER FILE SUFFIX ON COMMAND LINE'
         stop
