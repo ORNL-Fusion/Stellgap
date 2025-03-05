@@ -89,13 +89,13 @@ C     Local runtime settings
 C-----------------------------------------------------------------------
       itheta = 80                 ! # of theta gridpoints
       izeta = 80                  ! # of zeta gridpoints
+      make_stellgap_data = .true. ! Output tae_data_boozer file
       viz = .true.                ! Output visualization (AVS) data
       viz_flux = 0.5              ! Surface to output AVS data
+      make_full_torus = .false.   ! Output full_torus_coords file
+      surf_compute = .false.      ! Output surf_area_elements file
       test_jacob = .false.        ! Testing of Jacobian for consistency
       test_upr_lowr = .false.     ! Testing of Boozer metrics
-      make_stellgap_data = .true. ! Output tae_data_boozer file
-      make_full_torus = .true.    ! Output full_torus_coords file
-      surf_compute = .true.       ! Output surf_area_elements file
 C-----------------------------------------------------------------------
 C     Get command line input
 C-----------------------------------------------------------------------
