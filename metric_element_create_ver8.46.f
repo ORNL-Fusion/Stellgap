@@ -572,7 +572,7 @@ c
 c       zetang = 0.d0
 c       zetang = twopi/50.
        zetang = 0.9*twopi
-       do ks = 2,(nsd-1)*viz_flux
+       do ks = 2,int((nsd-1)*viz_flux)
 c       do ks = 1,nsd-1
        do kt = 1,itheta
        thetang = twopi*dble(kt-1)/dble(itheta-1)
