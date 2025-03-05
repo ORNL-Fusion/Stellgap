@@ -23,6 +23,9 @@ BLASLAPACK_LIB = -framework Accelerate # MacOS
 # BLAS/LAPACK (MKL)
 #BLASLAPACK_LIB = -I${MKLROOT}/include ${MKLROOT}/lib/libmkl_intel_lp64.a ${MKLROOT}/lib/libmkl_core.a ${MKLROOT}/lib/libmkl_sequential.a -lpthread -lm
 
+# SILO Flags (only used for xsilo)
+SILO_LIB = -L/Users/dsp/fortran_code_development/Silo-4.6.2/lib -lsilo
+
 ############### DO NOT EDIT BELOW #####################################
 
 PRCOMP_FLAGS += $(PARALLEL_FLAG)
@@ -42,6 +45,10 @@ LDFLAGS=${LIBSTELL_LIB} ${NETCDF_LIB} ${BLASLAPACK_LIB}
 
 OBJ=fitpack.o Fourier_lib_convolve.o 
 
+.PHONY: all clean
+
+all: xmetric xstgap xstgap_snd_ver6 xstgap_snd_ver7
+
 %.o: %.f
 	$(PRECOMP) $(PRCOMP_FLAGS) $^ > temp.f
 	$(FC) $(COMPILER_FLAGS) -c -o $@ temp.f $(FFLAGS)
@@ -58,8 +65,11 @@ xstgap_snd_ver6: stellgap_soundwave_lagrng_ver6.o $(OBJ)
 xstgap_snd_ver7: stellgap_soundwave_lagrng_ver7.o $(OBJ) 
 	$(FC) $(COMPILER_FLAGS) -o $@ $^ $(LDFLAGS)
 
+xsilo: stelgp_to_silo.o
+	$(FC) $(COMPILER_FLAGS) -o $@ $^ $(SILO_LIB)
+
 clean:
-	@rm -rf *.o xmetric xstgap xstgap_snd_ver6 xstgap_snd_ver7 temp.f
+	@rm -rf *.o xmetric xstgap xstgap_snd_ver6 xstgap_snd_ver7 xsilo temp.f
 
 help:
 	@echo 'BUILD OPTIONS:'
@@ -71,6 +81,7 @@ help:
 	@echo LIBSTELL_LIB is $(LIBSTELL_LIB)
 	@echo NETCDF_LIB is $(NETCDF_LIB)
 	@echo BLASLAPACK_LIB is $(BLASLAPACK_LIB)
+	@echo SILO_LIB is $(SILO_LIB)
 	@echo '--------------------------------'
 	@echo Precompiler is $(PRECOMP)
 	@echo Precompiler flags are $(PRCOMP_FLAGS)
