@@ -75,7 +75,7 @@ C-----------------------------------------------
       character arg1*40,warg1*45,bozout*45
       character*1 tb
       integer nargs, numargs, numchars, itheta, izeta, nznt
-      integer iargc, getarg, unit_no, istat, ierr, ig, lf, is
+      integer iargc, unit_no, istat, ierr, ig, lf, is
       real viz_flux   !for plotting interior flux surfaces in AVS
       real surf_area_element, surf_area_total
       logical lasym, viz, test_jacob, test_upr_lowr,
