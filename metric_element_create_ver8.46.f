@@ -76,7 +76,7 @@ C-----------------------------------------------------------------------
       INTEGER :: nfp, nsd, mnboz, i, j, k, mn, kz, kt, ks
       REAL(kind=rprec) :: r0,b0,amin,beta0,r0max,r0min,
      1  aspect, betaxis, ohs2, mat_test_diag, mat_test_offdiag
-      character arg1*40,warg1*45,bozout*45
+      character arg1*40,warg1*45,bozout*45,arg2*40
       integer nargs, numargs, numchars, itheta, izeta, nznt
       integer iargc, unit_no, istat, ierr, ig, lf, is
       real viz_flux   !for plotting interior flux surfaces in AVS
@@ -90,7 +90,7 @@ C-----------------------------------------------------------------------
       itheta = 80                 ! # of theta gridpoints
       izeta = 80                  ! # of zeta gridpoints
       make_stellgap_data = .true. ! Output tae_data_boozer file
-      viz = .true.                ! Output visualization (AVS) data
+      viz = .false.                ! Output visualization (AVS) data
       viz_flux = 0.5              ! Surface to output AVS data
       make_full_torus = .false.   ! Output full_torus_coords file
       surf_compute = .false.      ! Output surf_area_elements file
@@ -101,10 +101,60 @@ C     Get command line input
 C-----------------------------------------------------------------------
       numargs = iargc()
       CALL getarg(1,arg1)
-      if( numargs.ne.1 )then
-        print *,' MUST ENTER FILE SUFFIX ON COMMAND LINE'
+      if( numargs.lt.1 )then
+        print *,' Try calling with -help for options.'
         stop
       endif
+      i = 2
+      IF (arg1 == '-help') i=1
+      DO WHILE (i<=numargs)
+        CALL GETARG(i,arg2)
+        SELECT CASE (arg2)
+          CASE ("-surf_compute")
+            surf_compute = .TRUE.
+          CASE ("-test_jacob")
+            test_jacob = .TRUE.
+          CASE ("-test_upr_lowr")
+            test_upr_lowr = .TRUE.
+          CASE ("-make_full_torus")
+            make_full_torus = .TRUE.
+          CASE ("-viz")
+            viz = .TRUE.
+            i = i + 1
+            CALL GETARG(i,arg2)
+            READ(arg2,*) viz_flux
+          CASE ("-itheta")
+            i = i + 1
+            CALL GETARG(i,arg2)
+            READ(arg2,*) itheta
+          CASE ("-izeta")
+            i = i + 1
+            CALL GETARG(i,arg2)
+            READ(arg2,*) izeta
+          CASE ("-help","-h")
+            WRITE(6, '(A)') ' Initialization code for STELLGAP/AE3D'
+            WRITE(6, '(A)') ' Usage: xmetric EXT <options>'
+            WRITE(6, '(A)') '    EXT: Boozmn file extension'
+            WRITE(6, '(A)') '    <options>'
+            WRITE(6, '(A)') 
+     1         '     -itheta 90:       Number of theta gridpoints'
+            WRITE(6, '(A)') 
+     1         '     -izeta 90:        Number of zeta gridpoints'
+            WRITE(6, '(A)') 
+     1         '     -surf_compute:    Produce surf_area_elements file'
+            WRITE(6, '(A)') '     -test_jacob:      Jacobian test'
+            WRITE(6, '(A)') '     -test_upr_lowr:   Metric Test'
+            WRITE(6, '(A)') 
+     1         '     -make_full_torus: Produce full_torus_coords file'
+            WRITE(6, '(A,A)') 
+     1         '     -viz 0.5:          Produce cart_coords and',
+     2         ' metrics file at s'
+            WRITE(6, '(A)') 
+     1         '     -help:             Produce this help message'
+            STOP
+        END SELECT
+        i = i + 1
+      END DO
 
 C-----------------------------------------------------------------------
 C     Open output files
@@ -116,6 +166,7 @@ C-----------------------------------------------------------------------
         open(unit=20,file="tae_data_boozer",status="unknown")
       endif
       if(viz) then
+        WRITE(6,'(A,F5.3)') "Using viz_flux = ",viz_flux 
         open(unit=12,file="cart_coords",status="unknown")
         open(unit=14,file="metrics",status="unknown")
       endif
@@ -164,6 +215,8 @@ C-----------------------------------------------------------------------
       amin = r0/aspect
       beta0 = betaxis
       write(*,'(///)')
+      WRITE(6,'(4X,A,I3)') 'ITHETA: ',itheta
+      WRITE(6,'(4X,A,I3)') 'IZETA: ',izeta
       WRITE(6,'(4X,A,I3)') 'FIELD PERIODS: ',nfp
       WRITE(6,'(4X,A,I3)') 'NS: ',nsd
       WRITE(6,'(4X,A,F6.3)') 'ASPECT: ',ASPECT
