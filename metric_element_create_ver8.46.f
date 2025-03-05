@@ -233,7 +233,7 @@ C     Interpolate all quantities from half to full radial mesh
 C-----------------------------------------------------------------------
       allocate(iotaf(nsd), presf(nsd), jtorf(nsd), jpolf(nsd),
      1         phipf(nsd), stat=k)
-      if (k .ne. 0) stop 'Allocation error'
+      if (k .ne. 0) stop 'Allocation error 01'
 
       iotaf=zero ; presf =zero; jtorf =zero; jpolf=zero; phipf=zero
 
@@ -248,7 +248,7 @@ C     Compute derivative quantities on radial full mesh
 C-----------------------------------------------------------------------       
       allocate(iotapf(nsd), jpolpf(nsd), jtorpf(nsd),
      1         phippf(nsd), prespf(nsd), stat=k)
-      if (k .ne. 0) stop 'Allocation error'
+      if (k .ne. 0) stop 'Allocation error 02'
 
       iotapf=zero; prespf =zero; jtorpf =zero; jpolpf=zero; phippf=zero
 
@@ -268,7 +268,7 @@ C-----------------------------------------------------------------------
 C     store (m,n)-descriptors
 C-----------------------------------------------------------------------  
       allocate (xnb(mnboz), xmb(mnboz), stat=k)
-      if (k .ne. 0) stop 'Allocation error'
+      if (k .ne. 0) stop 'Allocation error 03'
       xnb=xn
       xmb=xm
 
@@ -279,7 +279,7 @@ C-----------------------------------------------------------------------
      1          bmncbf(mnboz,nsd), rmncpbf(mnboz,nsd), 
      2          zmnspbf(mnboz,nsd),pmnspbf(mnboz,nsd),
      3          bmncpbf(mnboz,nsd), stat=k)
-      if (k .ne. 0) stop 'Allocation error'
+      if (k .ne. 0) stop 'Allocation error 04'
  
       rmncbf=zero; zmnsbf=zero; pmnsbf=zero; bmncbf=zero
       rmncpbf=zero; zmnspbf=zero; pmnspbf=zero; bmncpbf=zero
@@ -311,7 +311,7 @@ C-----------------------------------------------------------------------
      2         rjacobs(ig,nsd), gsssup(ig,nsd), gttsup(ig,nsd),
      3         gzzsup(ig,nsd), gstsup(ig,nsd), gszsup(ig,nsd),
      4         gtzsup(ig,nsd), brho(ig,nsd), stat=istat)
-      if (istat .ne. 0) stop 'Allocation error'
+      if (istat .ne. 0) stop 'Allocation error 05'
 
 C-----------------------------------------------------------------------
 C     Begin main computation loop over surfaces
