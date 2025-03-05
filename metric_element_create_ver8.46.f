@@ -112,7 +112,7 @@ c
 c      write(*,*) warg1
 c      call read_wout_file(warg1,ierr)
       call read_boozer_file(warg1,ierr)
-       if (istat.ne.0) stop 22
+       if (ierr.ne.0) stop 22
        
        nfp = nfp_b
        nsd = ns_b
