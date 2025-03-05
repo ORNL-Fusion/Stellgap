@@ -178,7 +178,7 @@ C-----------------------------------------------------------------------
       warg1 = arg1
       WRITE(6,*) 'READING: ',warg1
       call read_boozer_file(warg1,ierr)
-      if (istat.ne.0) stop 22
+      if (ierr.ne.0) stop 22
 
 C-----------------------------------------------------------------------
 C     Process Boozmn data
