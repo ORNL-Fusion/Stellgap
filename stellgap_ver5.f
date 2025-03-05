@@ -501,6 +501,20 @@ C-----------------------------------------------------------------------
       character*10 date, time, zone
       character*10 arg1, arg2
       integer values(8)
+#if defined (PARALLEL)      
+      INTEGER :: vmajor, vminor, liblen
+      CHARACTER(LEN=MPI_MAX_LIBRARY_VERSION_STRING) :: mpi_lib_name
+#endif
+      CHARACTER(64), PARAMETER :: git_repository = 
+     > GIT_REPO_EXT
+      CHARACTER(32), PARAMETER :: git_version = 
+     > GIT_VERSION_EXT
+      CHARACTER(40), PARAMETER :: git_hash = 
+     > GIT_HASH_EXT
+      CHARACTER(32), PARAMETER :: git_branch = 
+     > GIT_BRANCH_EXT
+      CHARACTER(19), PARAMETER :: built_on = 
+     > BUILT_ON_EXT
 
 C-----------------------------------------------------------------------
 C     Fortran Namelists
@@ -524,8 +538,6 @@ C-----------------------------------------------------------------------
       read(arg1,'(i3)') irads
       read(arg2,'(i4)') ir_fine_scl
       irad3 = 3*irads
-      write(*,'("irads = ",i4," irads3 = ",i4," ir_fine_scl = ",i5)')
-     >       irads, irad3, ir_fine_scl
 
 C-----------------------------------------------------------------------
 C     Allocate quantities
@@ -568,20 +580,44 @@ C-----------------------------------------------------------------------
         write(*,'("mpi_comm_rank returned ier =")') ier
         stop
       endif    
-       write(procnum,'(i3)') mype
-       write(*,*) procnum
-       outfile = "alfven_spec" // trim(adjustl(procnum))
+      CALL MPI_GET_VERSION(vmajor, vminor, ier)
+      if (ier .ne. 0) then
+        write(*,'("mpi_get_version returned ier =")') ier
+        stop
+      endif    
+      CALL MPI_GET_LIBRARY_VERSION(mpi_lib_name, liblen, ier)
+      if (ier .ne. 0) then
+        write(*,'("mpi_get_library_version returned ier =")') ier
+        stop
+      endif    
+      outfile = "alfven_spec" // trim(adjustl(procnum))
 #endif
 
 C-----------------------------------------------------------------------
 C     Output runtime information
 C----------------------------------------------------------------------- 
       if(mype .eq. 0) then
-        write(*,*) mype, npes
-        write(*,*) procnum
-        write(*,*) outfile
+        WRITE(6, '(a)') 'STELLGAP Version 5.0'
+#if defined (PARALLEL)    
+        WRITE(6,'(A)')      '-----  MPI Parameters  -----'
+        WRITE(6,'(A,I2,A,I8)') '   MPI_version:  ', vmajor,'.',vminor
+        WRITE(6,'(A,A)')  '   ', TRIM(mpi_lib_name(1:liblen))
+        WRITE(6,'(A,I8)')  '   Nproc_total:  ', npes
+#else
+        WRITE(6,'(A)')      '-----  Serial Execution  -----'
+#endif
+        WRITE(6,'(A)')      '-----  GIT Repository  -----'
+        WRITE(6,'(A,A)')  '   Repository: ', TRIM(git_repository)
+        WRITE(6,'(A,A)')  '   Branch:     ', TRIM(git_branch)
+        WRITE(6,'(A,A)')  '   Version:    ', TRIM(git_version)
+        WRITE(6,'(A,A)')  '   Built-on:   ', TRIM(built_on)
+        WRITE(6,'(A,A)')  '   Hash:       ', TRIM(git_hash)
+        WRITE(6,'(A)')      '-----  CODE START  -----'
         call date_and_time(date, time, zone, values)
-        write(*,*) time
+        WRITE(6,'(A,2X,i4,".",i2,".",i2)') '   Date: ',values(1),
+     >       values(2),values(3)
+        WRITE(6,'(A,2X,i2,":",i2,":",i2)') '   Time: ',values(5),
+     >       values(6),values(7)
       endif
       if(ipos_def_sym) isym_opt = 1
       if(.NOT.ipos_def_sym) isym_opt = 0
@@ -596,6 +632,21 @@ C-----------------------------------------------------------------------
       naux = 10*mn_col
       mu0 = 2.d-7*twopi
       scale_khz = (1.d+3*twopi)**2
+
+C-----------------------------------------------------------------------
+C     Output some runtime information
+C----------------------------------------------------------------------- 
+      IF (mype .eq. 0) THEN
+        WRITE(6,'(A)')      '-----  GRID Parameters  -----'
+        WRITE(6,'(A,I5)') '   RADIAL GRID: ',irads
+        WRITE(6,'(A,I5)') '   THETA GRID: ',ith
+        WRITE(6,'(A,I5)') '   ZETA GRID: ',izt
+        WRITE(6,'(A,I5)') '   FINE SCALE RADIAL GRID: ',ir_fine_scl
+        WRITE(6,'(A,I8)') '   FOURIER MODES: ',mnmx
+        WRITE(6,'(A,I8)') '   REALSPACE GRID: ',nznt
+        WRITE(6,'(A,I8)') '   MN_COL: ',mn_col
+        CALL FLUSH(6)
+      END IF
 
 C-----------------------------------------------------------------------
 C     Allocate arrays
@@ -616,8 +667,6 @@ C-----------------------------------------------------------------------
       allocate(alfi(mn_col), stat=istat)
       allocate(vl(mn_col,mn_col), stat=istat)
       allocate(vr(mn_col,mn_col), stat=istat)
-      if(mype .eq. 0)
-     >    write(*,*) izt, ith, irads, mnmx, nznt, mn_col
       allocate(bfield(izt,ith,irads), stat=istat)
       allocate(gsssup(izt,ith,irads), stat=istat)
       allocate(rjacob(izt,ith,irads), stat=istat)
@@ -655,11 +704,14 @@ C-----------------------------------------------------------------------
 C     Boozer coordinates input - new ae-mode-structure input
 C----------------------------------------------------------------------- 
       open(unit=20,file="tae_data_boozer",status="old")
-c     LRFP logic is all screwy
-c      read(20,'(L)') lrfp    !uncomment and remove next line if lrfp added to tae_data_boozer
-      lrfp = .false.
-      if(lrfp) write(*,'("Using RFP settings")')
-      if(.not.lrfp) write(*,'("Using tokamak/stellarator settings")')
+      ! This part is a bit bizzare but only the RFP files and T/F
+      IF (lrfp) THEN
+        read(20,'(L)') lrfp ! This only present if an RFP file
+        IF (mype .eq. 0) write(*,'("   Using RFP settings")')
+      ELSE
+        IF (mype .eq. 0) 
+     1     write(*,'("   Using tokamak/stellarator settings")')
+      END IF
       do ir = 1,irads
         read(20,'(1x,i3,4(2x,e15.7))') nn,iotac(ir),phipc(ir),dum1,dum2
         iotac_inv(ir) = 1.d0/iotac(ir)
@@ -705,14 +757,20 @@ C-----------------------------------------------------------------------
       do ir=1,irads
         rho(ir) = nsurf(ir)/nsurf(irads)
       end do
+      IF (mype .eq. 0) THEN
+        WRITE(6,'(A)')      '-----  Constructing Splines  -----'
+        CALL FLUSH(6)
+      END IF
 
 C-----------------------------------------------------------------------
 C     Make spline fits of iota
 C-----------------------------------------------------------------------
       ispl_opt = 3; ierr_spl = 0; sigma_spl = 0.
       call curv1(irads,rho,iotac,sp1,sp2,ispl_opt,ypi,
-     >   tempi,sigma_spl,ierr_spl)
+     1   tempi,sigma_spl,ierr_spl)
       if(ierr_spl .ne. 0) write(*,'("spline error iota",i3)') ierr_spl
+      IF (mype .eq. 0) WRITE(6,'(A,F9.5,A,F9.5,A)') 
+     1     '   IOTA     = [',iotac(1),',',iotac(irads),']'
 
 C-----------------------------------------------------------------------
 C     Compute ion density and Alfven velocity
@@ -743,6 +801,14 @@ C-----------------------------------------------------------------------
      2                iota_r(irr),va
       end do     !irr = 1,ir_fine_scl
  67   format(e12.5,3(3x,e12.5))
+      IF (mype .eq. 0) WRITE(6,'(A,F9.5,A,F9.5,A)') 
+     1     '   N_ION    = [',ion_density(1)*ion_density_0/1E20,',',
+     2     ion_density(ir_fine_scl)*ion_density_0/1E20,'] x10^20 m^-3'
+      IF (mype .eq. 0) WRITE(6,'(A,F9.2,A,F9.2,A)') 
+     1     '   V_ALFVEN = [',
+     2  sqrt(bfavg**2/(mu0_rho_ion(1)/scale_khz))/1000,',',
+     3  sqrt(bfavg**2/(mu0_rho_ion(ir_fine_scl)/scale_khz))/1000,
+     4  '] km/s'
 
 C-----------------------------------------------------------------------
 C     Make spline fits of 1/iota
@@ -752,6 +818,8 @@ C-----------------------------------------------------------------------
      1   tempi,sigma_spl,ierr_spl)
       if(ierr_spl .ne. 0) 
      1 write(*,'("spline error 1/iota",i3)') ierr_spl
+      IF (mype .eq. 0) WRITE(6,'(A,F9.5,A,F9.5,A)') 
+     1     '   q        = [',iotac_inv(1),',',iotac_inv(irads),']'
       do irr = 1,ir_fine_scl
         r_pt = rho(1)+real(irr-1)*(rho(irads) - rho(1))
      1           /real(ir_fine_scl-1)
@@ -824,8 +892,18 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C     Compute F Coefficients
 C-----------------------------------------------------------------------
+      IF (mype .eq. 0) THEN
+        WRITE(6,'(A)')      '-----  Computing Eigenmodes  -----'
+        WRITE(6,'(5X,A,I3.3,A)',ADVANCE='no') 'Solving [',0,']%'
+        CALL FLUSH(6)
+      END IF
       numrads = ir_fine_scl/npes
       do ir = (mype*numrads+1),(mype*numrads+numrads)
+        IF ((mype .eq. 0).and.(MOD(ir,64)==0)) THEN
+          WRITE(6,'(A,I3,A)',ADVANCE='no') 
+     >            '[',INT((100.*ir)/(mype*numrads+numrads)),']%'
+          CALL FLUSH(6)
+        END IF
         r_pt = rho(1)+real(ir-1)*(rho(irads) - rho(1))
      1           /real(ir_fine_scl-1)
         f1_avg = 0.;f3_avg = 0.
@@ -1009,12 +1087,17 @@ C-----------------------------------------------------------------------
       close(unit=20)
       close(unit=21)
       close(unit=8)
-      if(mype .eq. 0) write(*,
-     > '("modes = ",i5,2x,"no. of radial points = ",i5)')
-     >  mn_col,ir_fine_scl
-      if(mype .eq. 0) write(7,'(i5,3(2x,i5))') iopt,mn_col,ir_fine_scl,
-     >    isym_opt
-      if(mype .eq. 0) close(unit=7)
+      if(mype .eq. 0) THEN
+        WRITE(6,'(A)') ' '
+        WRITE(6,'(A)')      '-----  Computation DONE  -----'
+        WRITE(6,'(A,I5)') '   Number of modes found = ',mn_col
+        WRITE(6,'(A,I5)') '   Number of Radial grid points = ',
+     1      ir_fine_scl
+!        WRITE(6,) '("modes = ",i5,2x,"no. of radial points = ",i5)'
+!     1      mn_col,ir_fine_scl
+        WRITE(7,'(i5,3(2x,i5))') iopt,mn_col,ir_fine_scl,isym_opt
+        CLOSE(unit=7)
+      endif
 
 C-----------------------------------------------------------------------
 C     Deallocate
@@ -1027,7 +1110,11 @@ C     Write time
 C-----------------------------------------------------------------------
       if(mype .eq. 0) then
         call date_and_time(date, time, zone, values)
-        write(*,*) time
+        WRITE(6,'(A,2X,i4,".",i2,".",i2)') '   Date: ',values(1),
+     >       values(2),values(3)
+        WRITE(6,'(A,2X,i2,":",i2,":",i2)') '   Time: ',values(5),
+     >       values(6),values(7)
+        WRITE(6, '(A)') '----- STELLGAP DONE -----'
       endif
 
 C-----------------------------------------------------------------------
