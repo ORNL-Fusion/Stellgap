@@ -26,3 +26,15 @@
 *.exe
 *.out
 *.app
+
+# OSX Things
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# STELLGAP Things
+temp.f
+xmetric
+xstgap* 
+xsilo
