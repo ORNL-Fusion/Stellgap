@@ -1,0 +1,5 @@
+OPT="-O2"
+gfortran -c $OPT stellgap_serial_ver5.f
+gfortran -c $OPT Fourier_lib_convolve.f
+gfortran -c $OPT fitpack.f
+gfortran $OPT -o xstgap -I. stellgap_serial_ver5.o Fourier_lib_convolve.o fitpack.o -llapack
